@@ -144,6 +144,17 @@ public class ClientLibrariesImpl implements ClientLibraries {
         categoriesArray = categoriesSet.toArray(new String[0]);
     }
 
+    @Override
+    public String getAmpJS() {
+
+        String js =  getLibIncludeForAMP();
+        String[] split = js.split("<script");
+        String script = Arrays.stream(split).filter(it -> it.contains("site")).findAny()
+            .map(it -> it.substring(6, it.length()-12))
+            .orElse("");
+        return script;
+    }
+
     @NotNull
     @Override
     public String getJsInline() {
@@ -200,6 +211,28 @@ public class ClientLibrariesImpl implements ClientLibraries {
         String html = sw.toString();
         // inject attributes from HTL into the JS and CSS HTML tags
         return getHtmlWithInjectedAttributes(html);
+    }
+
+    private String getLibIncludeForAMP() {
+        LibraryType type = LibraryType.JS;
+        StringWriter sw = new StringWriter();
+        try {
+            if (categoriesArray == null || categoriesArray.length == 0)  {
+                LOG.error("No categories detected. Please either specify the categories as a CSV string or a set of resource types for looking them up!");
+            } else {
+                PrintWriter out = new PrintWriter(sw);
+                if (type == LibraryType.JS) {
+                    htmlLibraryManager.writeJsInclude(request, out, categoriesArray);
+                } else if (type == LibraryType.CSS) {
+                    htmlLibraryManager.writeCssInclude(request, out, categoriesArray);
+                } else {
+                    htmlLibraryManager.writeIncludes(request, out, categoriesArray);
+                }
+            }
+        } catch (IOException e) {
+            LOG.error("Failed to include client libraries {}", Arrays.toString(categoriesArray));
+        }
+        return sw.toString();
     }
 
     /**

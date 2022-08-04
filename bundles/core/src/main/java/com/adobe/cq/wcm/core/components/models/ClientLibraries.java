@@ -99,6 +99,10 @@ public interface ClientLibraries {
      */
     String OPTION_MEDIA = "media";
 
+
+    default  String getAmpJS() {
+        return null;
+    }
     /**
      * Returns a concatenation of all the JS libraries defined for the requested resource.
      *
